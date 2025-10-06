@@ -1,0 +1,95 @@
+turf-booking-app/
+│
+├── server/                     # Backend (Express + MongoDB)
+│   ├── src/
+│   │   ├── config/             # Configurations (db, jwt, payment, etc.)
+│   │   │   ├── db.js
+│   │   │   ├── jwt.js
+│   │   │   └── razorpay.js
+│   │   │
+│   │   ├── controllers/        # Route logic
+│   │   │   ├── authController.js
+│   │   │   ├── turfController.js
+│   │   │   ├── slotController.js
+│   │   │   ├── bookingController.js
+│   │   │   └── paymentController.js
+│   │   │
+│   │   ├── models/             # MongoDB Schemas
+│   │   │   ├── User.js
+│   │   │   ├── Turf.js
+│   │   │   ├── Slot.js
+│   │   │   ├── Booking.js
+│   │   │   └── Payment.js
+│   │   │
+│   │   ├── routes/             # Express Routes
+│   │   │   ├── authRoutes.js
+│   │   │   ├── turfRoutes.js
+│   │   │   ├── slotRoutes.js
+│   │   │   ├── bookingRoutes.js
+│   │   │   └── paymentRoutes.js
+│   │   │
+│   │   ├── middleware/         # Middlewares
+│   │   │   ├── authMiddleware.js
+│   │   │   └── errorHandler.js
+│   │   │
+│   │   ├── utils/              # Helper functions
+│   │   │   ├── generateToken.js
+│   │   │   └── sendEmail.js (optional, for booking confirmation)
+│   │   │
+│   │   └── app.js              # Express App
+│   │
+│   ├── .env                    # Secrets (DB, JWT, Razorpay keys)
+│   ├── package.json
+│   └── server.js               # Server start file
+│
+
+
+
+
+
+├── client/                     # Frontend (React + Vite)
+│   ├── public/                 # Static assets
+│   │   └── favicon.ico
+│   │
+│   ├── src/
+│   │   ├── assets/             # Images, icons, etc.
+│   │   ├── components/         # Reusable components
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── Footer.jsx
+│   │   │   ├── TurfCard.jsx
+│   │   │   └── SlotPicker.jsx
+│   │   │
+│   │   ├── pages/              # Page-level components
+│   │   │   ├── Home.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── Register.jsx
+│   │   │   ├── TurfDetails.jsx
+│   │   │   ├── OwnerDashboard.jsx
+│   │   │   ├── BookingPage.jsx
+│   │   │   └── PaymentSuccess.jsx
+│   │   │
+│   │   ├── redux/              # Redux Toolkit slices (if Redux used)
+│   │   │   ├── store.js
+│   │   │   ├── userSlice.js
+│   │   │   ├── turfSlice.js
+│   │   │   ├── slotSlice.js
+│   │   │   └── bookingSlice.js
+│   │   │
+│   │   ├── context/            # Alternative: Context API (instead of Redux)
+│   │   │   └── AuthContext.jsx
+│   │   │
+│   │   ├── utils/              # Helpers
+│   │   │   ├── api.js          # Axios instance
+│   │   │   └── formatDate.js
+│   │   │
+│   │   ├── App.jsx             # Main app
+│   │   └── main.jsx            # Entry point
+│   │
+│   ├── .env                    # Frontend env (API URL, Razorpay key)
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.js
+│
+├── .gitignore
+├── README.md
+└── package.json                # root package.json (optional, if using workspaces)
