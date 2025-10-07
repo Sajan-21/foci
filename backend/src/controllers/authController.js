@@ -190,3 +190,97 @@ exports.emailVerification = async(req, res) => {
         });
     }
 }
+
+exports.otpVerification = async(req, res) => {
+    try {
+        const { email } = req.params;
+        if(!email || !regExp.gmailRegex.test(email)) {
+            return res.status(400).json({
+                success: false,
+                message: "something went wrong related to the email"
+            });
+        }
+
+        const { otp } = req.body;
+        if(!otp || !regExp.otpRegex.test(otp)) {
+            return res.status(400).json({
+                success: false,
+                message: !otp? "otp required": "otp must contain 6 digit without white space"
+            });
+        }
+
+        const otpData = await Otp.findOne({email});
+        if(!otpData) {
+            return res.status(400).json({
+                success: false,
+                message: "otp expired!"
+            });
+        }
+
+        if(otp != otpData.otp) {
+            return res.status(400).json({
+                success: false,
+                message: "invalid otp"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "otp verified"
+        });
+
+    } catch (error) {
+        console.log("error in otpVerification: ", error);
+        return res.status(400).json({
+            success: false,
+            message: error.message || error
+        });
+    }
+}
+
+exports.resetForgetPassword = async(req, res) => {
+    try {
+        const { email } = req.params;
+        const { newPassword, confirmPassword } = req.body;
+
+        if(!email || !newPassword || !confirmPassword || !regExp.gmailRegex.test(email) || !regExp.passwordRegex.test(newPassword) || !regExp.passwordRegex.test(confirmPassword)) {
+            return res.status(400).json({
+                success: false,
+                message: "something went wrong with the incoming data"
+            });
+        }
+
+        const userData = await User.findOne({email});
+        if(!userData) {
+            return res.status(400).json({
+                success: false,
+                message: "user not found"
+            });
+        }
+
+        if(newPassword !== confirmPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "confirm password not matching"
+            });
+        }
+
+        const hashedPassword = bcrypt.hashValues(newPassword);
+
+        const updatePassword = await User.updateOne({email}, {$set: {password: hashedPassword}});
+
+        if(updatePassword) {
+            return res.status(200).json({
+                success: true,
+                message: "password updated succesfully"
+            });
+        }
+
+    } catch (error) {
+        console.log("error in resetForgetPassword: ", error);
+        return res.status(400).json({
+            success: false,
+            message: error.message || error
+        });
+    }
+}
