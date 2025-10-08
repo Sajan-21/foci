@@ -2,10 +2,11 @@ const User = require('../models/User');
 const jwt = require('../utils/jwt');
 const bcrypt = require('../utils/bcrypt');
 const regExp = require("../utils/regExp");
-const generateOTP = require("../utils/generateOtp").generateOTP;
+const { generateOTP } = require("../utils/generateOtp");
 const Otp = require("../models/Otp");
 const { sendMail } = require('../utils/sendMail');
-const OTPtemplate = require("../utils/emailTemplates/OTPtemplate").OTPtemplate;
+const { OTPtemplate } = require("../utils/emailTemplates/OTPtemplate");
+const { cloudinaryUploads } = require('../utils/cloudinaryUpload');
 
 exports.signUp = async(req, res) => {
     try {
@@ -50,11 +51,24 @@ exports.signUp = async(req, res) => {
             });
         }
 
-        const newUser = {
-            name,
-            email,
-            phone,
-            password: hashedPassword,
+        if(req.file) {
+            const result = await cloudinaryUploads(req.file.buffer, "avatars");
+            const avatar = result.secure_url;
+
+            const newUser = {
+                name,
+                email,
+                phone,
+                password: hashedPassword,
+                avatar
+            }
+        }else {
+            const newUser = {
+                name,
+                email,
+                phone,
+                password: hashedPassword,
+            }
         }
 
         const addUser = await User.create(newUser);

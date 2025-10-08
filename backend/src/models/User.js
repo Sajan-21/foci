@@ -23,6 +23,10 @@ const userSchema = new mongoose.Schema({
         enum: ["admin", "owner", "manager", "player"],
         required: [true, "role required"],
         default: "player"
+    },
+    avatar: {
+        type: String,
+        default: ""
     }
 });
 
