@@ -6,56 +6,44 @@ const { generateOTP } = require("../utils/generateOtp");
 const Otp = require("../models/Otp");
 const { sendMail } = require('../utils/sendMail');
 const { OTPtemplate } = require("../utils/emailTemplates/OTPtemplate");
-const { cloudinaryUploads } = require('../utils/cloudinaryUpload');
+const cloudinaryUploads = require("../utils/cloudinaryUpload").uploadToCloudinary;
+const { sendResponse } = require("../utils/responseHandler");
 
 exports.signUp = async(req, res) => {
     try {
         const { name, email, password, phone } = req.body;
 
         if(!name || !email || !password || !phone ) {
-            return res.status(400).json({
-                success: false,
-                message: "input field is missing."
-            });
+            return sendResponse(res, 400, false, "input fields missing");
         }
 
         if(!regExp.gmailRegex.test(email)) {
-            return res.status(400).json({
-                success: false,
-                message: "wrong gmail format"
-            });
+            return sendResponse(res, 400, false, "wrong mail format");
         }
 
         const checkEmailExistency = await User.findOne({email});
 
         if(checkEmailExistency) {
-            return res.status(400).json({
-                success: false,
-                message: "This email already exist. Try login."
-            });
+            return sendResponse(res, 400, false, "This email already exist. Try login.");
         }
 
         if(!regExp.passwordRegex.test(password)) {
-            return res.status(400).json({
-                success: false,
-                message: "password must contain minimum 8 characters\nupperCase letter\nlowerCase letter\natleast one special character\natleast one digit"
-            });
+            return sendResponse(res, 400, false, "password must contain minimum 8 characters\nupperCase letter\nlowerCase letter\natleast one special character\natleast one digit");
         }
 
         const hashedPassword = bcrypt.hashValues(password);
 
         if(!regExp.phoneRegex.test(phone)) {
-            return res.status(400).json({
-                success: false,
-                message: "please enter a valid 10 digit phone number"
-            });
+            return sendResponse(res, 400, false, "please enter a valid 10 digit phone number");
         }
+
+        let newUser;
 
         if(req.file) {
             const result = await cloudinaryUploads(req.file.buffer, "avatars");
             const avatar = result.secure_url;
 
-            const newUser = {
+            newUser = {
                 name,
                 email,
                 phone,
@@ -63,7 +51,7 @@ exports.signUp = async(req, res) => {
                 avatar
             }
         }else {
-            const newUser = {
+            newUser = {
                 name,
                 email,
                 phone,
@@ -76,19 +64,12 @@ exports.signUp = async(req, res) => {
         const token = jwt.generateToken(addUser._id, "4d");
 
         if(addUser) {
-            return res.status(200).json({
-                success: true,
-                message: `welcome to spotOn ${addUser.name}`,
-                data: token
-            });
+            return sendResponse(res, 200, true, `welcome to foci ${addUser.name}`, token);
         }
 
     } catch (error) {
         console.log("error from signUp: ", error);
-        return res.status(400).json({
-            success: false,
-            message: error.message || error
-        });
+        return sendResponse(res, 400, false, error.message ? error.message : error);
     }
 }
 
@@ -97,58 +78,37 @@ exports.login = async(req, res) => {
         const {email, password} = req.body;
 
         if(!email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: !email ? "email required" : "password required"
-            });
+            return sendResponse(res, 400, false, !email? "email required" : "password required");
         }
 
         if(!regExp.gmailRegex.test(email)) {
-            return res.status(400).json({
-                success: false,
-                message: "wrong gmail format"
-            });
+            return sendResponse(res, 400, false, "wrong mail format");
         }
 
         if(!regExp.passwordRegex.test(password)) {
-            return res.status(400).json({
-                success: false,
-                message: "password must contain minimum 8 characters\nupperCase letter\nlowerCase letter\natleast one special character\natleast one digit"
-            });
+            return sendResponse(res, 400, false, "password must contain minimum 8 characters\nupperCase letter\nlowerCase letter\natleast one special character\natleast one digit");
+
         }
 
         const userData = await User.findOne({email});
         if(!userData) {
-            return res.status(400).json({
-                success: false,
-                message: "user not found"
-            });
+            return sendResponse(res, 400, false, "user not found");
         }
 
         const checkPassword = bcrypt.compareValues(password, userData.password);
         if(!checkPassword) {
-            return res.status(400).json({
-                success: false,
-                message: "invalid password"
-            });
+            return sendResponse(res, 400, false, "invalid password");
         }
 
         const token = jwt.generateToken(userData._id, "4d");
 
         if(token) {
-                return res.status(200).json({
-                success: true,
-                message: "succesfully logged in",
-                data: token
-            });
+            return sendResponse(res, 200, true, "logged in succesfully", token);
         }
 
     } catch (error) {
         console.log("error from login: ", error);
-        return res.status(400).json({
-            success: false,
-            message: error.message || error
-        });
+        return sendResponse(res, 400, false, error.message ? error.message : error);
     }
 }
 
@@ -156,18 +116,12 @@ exports.emailVerification = async(req, res) => {
     try {
         const email = req.body.email;
         if(!email || !regExp.gmailRegex.test(email)) {
-            return res.status(400).json({
-                success: false,
-                message: !email? "email required": "please enter a valid email"
-            });
+            return sendResponse(res, 400, false, !email? "email required" : "please enter a valid email");
         }
 
         const userData = await User.findOne({email});
         if(!userData) {
-            return res.status(400).json({
-                success: false,
-                message: "user not found"
-            });
+            return sendResponse(res, 400, false, "user not found");
         }
 
         const otp = generateOTP(6);
@@ -190,18 +144,12 @@ exports.emailVerification = async(req, res) => {
         */
 
         // if(sendingMail) {
-            return res.status(200).json({
-                success: true,
-                message: "email verified succesfully\nplease check your mail and enter the otp within 3 minutes to proceed"
-            });
+            return sendResponse(res, 200, true, "email verified succesfully\nplease check your mail and enter the otp within 3 minutes to proceed");
         // }
 
     } catch (error) {
         console.log("error from emailVerification: ", error);
-        return res.status(400).json({
-            success: false,
-            message: error.message || error
-        });
+        return sendResponse(res, 400, false, error.message ? error.message : error);
     }
 }
 
@@ -209,46 +157,28 @@ exports.otpVerification = async(req, res) => {
     try {
         const { email } = req.params;
         if(!email || !regExp.gmailRegex.test(email)) {
-            return res.status(400).json({
-                success: false,
-                message: "something went wrong related to the email"
-            });
+            return sendResponse(res, 400, false, "something went wrong related to mail");
         }
 
         const { otp } = req.body;
         if(!otp || !regExp.otpRegex.test(otp)) {
-            return res.status(400).json({
-                success: false,
-                message: !otp? "otp required": "otp must contain 6 digit without white space"
-            });
+            return sendResponse(res, 400, false, !otp? "otp required": "otp must contain 6 digit without white space");
         }
 
         const otpData = await Otp.findOne({email});
         if(!otpData) {
-            return res.status(400).json({
-                success: false,
-                message: "otp expired!"
-            });
+            return sendResponse(res, 400, false, "otp expired");
         }
 
         if(otp != otpData.otp) {
-            return res.status(400).json({
-                success: false,
-                message: "invalid otp"
-            });
+            return sendResponse(res, 400, false, "invalid otp");
         }
 
-        return res.status(200).json({
-            success: true,
-            message: "otp verified"
-        });
+        return sendResponse(res, 200, true, "OTP verified succesfully");
 
     } catch (error) {
         console.log("error in otpVerification: ", error);
-        return res.status(400).json({
-            success: false,
-            message: error.message || error
-        });
+        return sendResponse(res, 400, false, error.message ? error.message : error);
     }
 }
 
@@ -258,25 +188,16 @@ exports.resetForgetPassword = async(req, res) => {
         const { newPassword, confirmPassword } = req.body;
 
         if(!email || !newPassword || !confirmPassword || !regExp.gmailRegex.test(email) || !regExp.passwordRegex.test(newPassword) || !regExp.passwordRegex.test(confirmPassword)) {
-            return res.status(400).json({
-                success: false,
-                message: "something went wrong with the incoming data"
-            });
+            return sendResponse(res, 400, false, "something went wrong with the incoming data");
         }
 
         const userData = await User.findOne({email});
         if(!userData) {
-            return res.status(400).json({
-                success: false,
-                message: "user not found"
-            });
+            return sendResponse(res, 400, false, "user not found");
         }
 
         if(newPassword !== confirmPassword) {
-            return res.status(400).json({
-                success: false,
-                message: "confirm password not matching"
-            });
+            return sendResponse(res, 400, false, "password and confirm password are not matching");
         }
 
         const hashedPassword = bcrypt.hashValues(newPassword);
@@ -284,17 +205,11 @@ exports.resetForgetPassword = async(req, res) => {
         const updatePassword = await User.updateOne({email}, {$set: {password: hashedPassword}});
 
         if(updatePassword) {
-            return res.status(200).json({
-                success: true,
-                message: "password updated succesfully"
-            });
+            return sendResponse(res, 400, false, "password updated succesfully");
         }
 
     } catch (error) {
         console.log("error in resetForgetPassword: ", error);
-        return res.status(400).json({
-            success: false,
-            message: error.message || error
-        });
+        return sendResponse(res, 400, false, error.message ? error.message : error);
     }
 }
