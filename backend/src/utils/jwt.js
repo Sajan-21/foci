@@ -13,3 +13,18 @@ exports.generateToken = (_id, expires) => {
         return error
     }
 }
+
+exports.verifyToken = (token) => {
+    try {
+        const tokenVerification = jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+            if(err) {
+                return err;
+            }else {
+                return decoded._id;
+            }
+        });
+    } catch (error) {
+        console.log("error in verifyToken: ", error);
+        return error
+    }
+}

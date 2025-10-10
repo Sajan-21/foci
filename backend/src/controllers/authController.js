@@ -17,8 +17,8 @@ exports.signUp = async(req, res) => {
             return sendResponse(res, 400, false, "input fields missing");
         }
 
-        if(!regExp.gmailRegex.test(email)) {
-            return sendResponse(res, 400, false, "wrong mail format");
+        if(!regExp.gmailRegex.test(email) || !regExp.usernameRegex.test(name)) {
+            return sendResponse(res, 400, false, !regExp.gmailRegex.test(email)? "wrong mail format" : "name is too long");
         }
 
         const checkEmailExistency = await User.findOne({email});
@@ -37,25 +37,20 @@ exports.signUp = async(req, res) => {
             return sendResponse(res, 400, false, "please enter a valid 10 digit phone number");
         }
 
-        let newUser;
+        let newUser = {
+                name,
+                email,
+                phone,
+                password: hashedPassword,
+            }
 
         if(req.file) {
             const result = await cloudinaryUploads(req.file.buffer, "avatars");
             const avatar = result.secure_url;
 
             newUser = {
-                name,
-                email,
-                phone,
-                password: hashedPassword,
+                ...newUser,
                 avatar
-            }
-        }else {
-            newUser = {
-                name,
-                email,
-                phone,
-                password: hashedPassword,
             }
         }
 
