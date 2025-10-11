@@ -24,6 +24,10 @@ const userSchema = new mongoose.Schema({
         required: [true, "role required"],
         default: "player"
     },
+    turf_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Turf"
+    },
     avatar: {
         type: String,
         default: ""

@@ -11,11 +11,18 @@ const turfSchema = new mongoose.Schema({
         required: true
     },
     location: {
-        type: String,
-        required: true,
+        lat: {
+            type: String
+        },
+        lng: {
+            type: String
+        }
     },
     gamesAllowed: {
         type: [String],
+    },
+    bio: {
+        type: String
     },
     images: {
         type: [String]
@@ -23,15 +30,11 @@ const turfSchema = new mongoose.Schema({
     facilities: {
         type: [String],
     },
-    price: {
-        morning: {
-            type: Number
-        },
-        evening: {
-            type: Number
-        }
-    },
     isActive: {
+        type: Boolean,
+        default: true
+    },
+    permission: {
         type: Boolean,
         default: true
     }
