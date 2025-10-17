@@ -23,9 +23,12 @@ exports.addTurf = async(req, res) => {
         }
 
         const addTurf = await Turf.create(newTurf);
+        if(addTurf) {
+            return sendResponse(res, 200, true, "turf added succesfully");
+        }
 
     } catch (error) {
         console.log("error in addTurf: ", error);
-        return sendResponse(res, 400, false, error.message? error.message : error);
+        return sendResponse(res, 500, false, error.message || error);
     }
 }

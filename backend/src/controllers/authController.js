@@ -47,10 +47,14 @@ exports.signUp = async(req, res) => {
         if(req.file) {
             const result = await cloudinaryUploads(req.file.buffer, "avatars");
             const avatar = result.secure_url;
+            const public_id = result.public_id;
 
             newUser = {
                 ...newUser,
-                avatar
+                image: {
+                    avatar,
+                    public_id
+                }
             }
         }
 
@@ -64,7 +68,7 @@ exports.signUp = async(req, res) => {
 
     } catch (error) {
         console.log("error from signUp: ", error);
-        return sendResponse(res, 400, false, error.message ? error.message : error);
+        return sendResponse(res, 500, false, error.message || error);
     }
 }
 
@@ -87,7 +91,7 @@ exports.login = async(req, res) => {
 
         const userData = await User.findOne({email});
         if(!userData) {
-            return sendResponse(res, 400, false, "user not found");
+            return sendResponse(res, 401, false, "user not found");
         }
 
         const checkPassword = bcrypt.compareValues(password, userData.password);
@@ -103,7 +107,7 @@ exports.login = async(req, res) => {
 
     } catch (error) {
         console.log("error from login: ", error);
-        return sendResponse(res, 400, false, error.message ? error.message : error);
+        return sendResponse(res, 500, false, error.message || error);
     }
 }
 
@@ -116,7 +120,7 @@ exports.emailVerification = async(req, res) => {
 
         const userData = await User.findOne({email});
         if(!userData) {
-            return sendResponse(res, 400, false, "user not found");
+            return sendResponse(res, 401, false, "user not found");
         }
 
         const otp = generateOTP(6);
@@ -144,7 +148,7 @@ exports.emailVerification = async(req, res) => {
 
     } catch (error) {
         console.log("error from emailVerification: ", error);
-        return sendResponse(res, 400, false, error.message ? error.message : error);
+        return sendResponse(res, 500, false, error.message || error);
     }
 }
 
@@ -166,14 +170,14 @@ exports.otpVerification = async(req, res) => {
         }
 
         if(otp != otpData.otp) {
-            return sendResponse(res, 400, false, "invalid otp");
+            return sendResponse(res, 401, false, "invalid otp");
         }
 
         return sendResponse(res, 200, true, "OTP verified succesfully");
 
     } catch (error) {
         console.log("error in otpVerification: ", error);
-        return sendResponse(res, 400, false, error.message ? error.message : error);
+        return sendResponse(res, 500, false, error.message || error);
     }
 }
 
@@ -188,11 +192,11 @@ exports.resetForgetPassword = async(req, res) => {
 
         const userData = await User.findOne({email});
         if(!userData) {
-            return sendResponse(res, 400, false, "user not found");
+            return sendResponse(res, 401, false, "user not found");
         }
 
         if(newPassword !== confirmPassword) {
-            return sendResponse(res, 400, false, "password and confirm password are not matching");
+            return sendResponse(res, 401, false, "password and confirm password are not matching");
         }
 
         const hashedPassword = bcrypt.hashValues(newPassword);
@@ -200,11 +204,11 @@ exports.resetForgetPassword = async(req, res) => {
         const updatePassword = await User.updateOne({email}, {$set: {password: hashedPassword}});
 
         if(updatePassword) {
-            return sendResponse(res, 400, false, "password updated succesfully");
+            return sendResponse(res, 204, true, "password updated succesfully");
         }
 
     } catch (error) {
         console.log("error in resetForgetPassword: ", error);
-        return sendResponse(res, 400, false, error.message ? error.message : error);
+        return sendResponse(res, 500, false, error.message || error);
     }
 }
