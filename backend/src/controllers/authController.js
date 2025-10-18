@@ -46,15 +46,11 @@ exports.signUp = async(req, res) => {
 
         if(req.file) {
             const result = await cloudinaryUploads(req.file.buffer, "avatars");
-            const avatar = result.secure_url;
+            const img_url = result.secure_url;
             const public_id = result.public_id;
-
-            newUser = {
-                ...newUser,
-                image: {
-                    avatar,
-                    public_id
-                }
+            newUser.avatar = {
+                img_url,
+                public_id 
             }
         }
 

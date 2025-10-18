@@ -1,4 +1,5 @@
 const Turf = require("../models/Turf");
+const { uploadToCloudinary } = require("../utils/cloudinaryUpload");
 const { sendResponse } = require("../utils/responseHandler");
 
 exports.addTurf = async(req, res) => {
@@ -31,4 +32,34 @@ exports.addTurf = async(req, res) => {
         console.log("error in addTurf: ", error);
         return sendResponse(res, 500, false, error.message || error);
     }
-}
+};
+
+exports.addImages = async (req, res) => {
+  try {
+    const {turfId} = req.body.turfId;
+    if(!turfId) {
+        return sendResponse(res, 400, false, "turf_id required");
+    }
+
+    if (!req.files || req.files.length === 0) {
+      return sendResponse(res, 400, false, "images required");
+    }
+
+    const results = await uploadToCloudinary(req.files, "Turf");
+
+    const images = results.map(img => ({
+      imgUrl: img.secure_url,
+      public_id: img.public_id
+    }));
+
+    const updateImages = await Turf.findByIdAndUpdate(turfId, { $push: { images: { $each: images } } });
+    if(updateImages) {
+        return sendResponse(res, 200, true, "images updated successfully");
+    }
+
+    return sendResponse(res, 200, true, "images uploaded successfully", images);
+  } catch (error) {
+    console.log("error in addImages: ", error);
+    return sendResponse(res, 500, false, error.message || error);
+  }
+};

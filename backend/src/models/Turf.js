@@ -24,9 +24,14 @@ const turfSchema = new mongoose.Schema({
     bio: {
         type: String
     },
-    images: {
-        type: [String]
-    },
+    images: [{
+        img_url: {
+            type: String,
+        },
+        public_id: {
+            type: String
+        }
+    }],
     facilities: {
         type: [String],
     },
@@ -34,6 +39,11 @@ const turfSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    slots: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Slot",
+        default: null
+    }],
     permission: {
         type: Boolean,
         default: true

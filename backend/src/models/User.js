@@ -28,8 +28,8 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Turf"
     },
-    image: {
-        avatar: {
+    avatar: {
+        img_url: {
             type: String,
         },
         public_id: {

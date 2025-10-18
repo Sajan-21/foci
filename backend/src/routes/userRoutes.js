@@ -9,5 +9,6 @@ const setAccessController = (allowed) => {
 }
 
 router.post("/foci/user/updatename", setAccessController("admin, owner, manager, player"), userController.updateUserName);
+router.post("/foci/user/updateavatar",setAccessController("admin, owner, manager, player"), upload.single('avatar'), userController.updateAvatar);
 
 module.exports = router;

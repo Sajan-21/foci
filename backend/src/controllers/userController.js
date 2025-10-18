@@ -27,33 +27,39 @@ exports.updateUserName = async(req, res) => {
     }
 }
 
-exports.updateAvatar = async(req, res) => {
-    try {
-        const {newAvatar, _id} = req.file;
-        if(!newAvatar || !_id) {
-            return sendResponse(res, 400, false, !newAvatar ? "image required" : "internal error: requested user's _id not found");
-        }
+exports.updateAvatar = async (req, res) => {
+  try {
+    const { _id } = req.body;
 
-        const userData = await User.findById(_id);
-        if(!userData) {
-            return sendResponse(res, 401, false, "user not found");
-        }
-
-        const deleteAvatar = await cloudinary.uploader.destroy(userData.avatar.public_id);
-        if(!deleteAvatar) {
-            return sendResponse(res, 400, false, "avatar uploading failed");
-        }
-        const updateAvatar = await uploadToCloudinary(req.file.buffer, "avatars");
-        const avatar = updateAvatar.secure_url;
-        const public_id = updateAvatar.public_id;
-
-        const updateUserAvatar = await User.findByIdAndUpdate(_id, {image: {avatar, public_id}}, {new: true});
-        if(updateAvatar) {
-            return sendResponse(res, 200, true, "avatar updated succesfully");
-        }
-
-    } catch (error) {
-        console.log("error in updateAvatar: ", error);
-        return sendResponse(res, 500, false, error.message || error);
+    if (!_id) {
+      return sendResponse(res, 400, false, "requested user's _id not found");
     }
-}
+    if (!req.file) {
+      return sendResponse(res, 400, false, "image required");
+    }
+
+    const userData = await User.findById(_id);
+    if (!userData) {
+      return sendResponse(res, 404, false, "user not found");
+    }
+
+    if (userData.image?.public_id) {
+      await cloudinary.uploader.destroy(userData.image.public_id);
+    }
+
+    const [uploadedAvatar] = await uploadToCloudinary([req.file], "avatars");
+    const img_url = uploadedAvatar.secure_url;
+    const public_id = uploadedAvatar.public_id;
+
+    const updatedUser = await User.findByIdAndUpdate(_id, {avatar: {img_url, public_id}}, {new: true});
+
+    if (!updatedUser) {
+      return sendResponse(res, 400, false, "avatar update failed");
+    }
+
+    return sendResponse(res, 200, true, "avatar updated successfully", avatar);
+  } catch (error) {
+    console.log("error in updateAvatar: ", error);
+    return sendResponse(res, 500, false, error.message || error);
+  }
+};
